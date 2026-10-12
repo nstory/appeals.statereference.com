@@ -17,23 +17,17 @@
 # only once every PDF is resolved; a failed one leaves its days uncovered for
 # the next run.
 #
-# The site is behind Imperva, which turns away plain HTTP posts and headless
-# Chrome, and now and then wants a human to pass a security check.  So we
-# drive a Chrome window, and when the check comes up we wait for you to click
-# through it there, then start that search over.  Chrome keeps its profile in
-# --profile-dir, so the cookie from passing the check outlives the run.
+# Chrome and the Imperva security check: see appeals_web.rb.
 
 require "date"
 require "fileutils"
-require "ferrum"
 require "json"
 require "nokogiri"
 require "optparse"
 require "set"
 require "time"
 require "uri"
-
-URL = "https://www.sec.state.ma.us/AppealsWeb/AppealsStatus.aspx"
+require_relative "appeals_web"
 
 # letter in the filename => ddlDateType value
 DATE_TYPES = {
@@ -43,7 +37,7 @@ DATE_TYPES = {
 }.freeze
 
 # earliest year in the form's case year dropdown
-FLOOR = Date.new(2014, 1, 1)
+FLOOR = Date.new(2020, 1, 1)
 CHUNK = 2
 FILENAME = /\A(\d{8})_([#{DATE_TYPES.keys.join}])_(\d{8})_(\d{8})\.json\z/
 
@@ -91,35 +85,12 @@ def plan(dir, today)
   chunks.sort_by.with_index { |(_, _, to), i| [-to.jd, i] }
 end
 
-# Imperva put up its security check, or answered a post with it
-class Blocked < StandardError; end
-
-class AppealsWeb
-  # searches that run into the security check this many times give up
-  ATTEMPTS = 3
-
-  def initialize(profile)
-    @browser = Ferrum::Browser.new(headless: false, timeout: 60,
-                                   browser_options: { "user-data-dir" => File.expand_path(profile) })
-    @page = @browser.create_page
-  end
-
-  def quit = @browser.quit
-
+class Searcher < AppealsWeb
   # rows closed between from and to, with each row's DownloadPaths.  A
   # search the security check interrupts starts over once it's passed, since
   # we can't tell where passing it leaves the page.
   def search(type, from, to)
-    attempt = 0
-    begin
-      attempt += 1
-      search_once(type, from, to)
-    rescue Blocked
-      raise "still running into the security check after #{ATTEMPTS} tries" if attempt >= ATTEMPTS
-
-      pass_check
-      retry
-    end
+    past_check { search_once(type, from, to) }
   end
 
   private
@@ -141,28 +112,6 @@ class AppealsWeb
     rows(Nokogiri::HTML(@page.body))
   end
 
-  # Wait, as long as it takes, for you to pass the security check in the
-  # Chrome window.  A post that got the check doesn't show it, so we load the
-  # search page to bring it up.
-  def pass_check
-    @page.go_to(URL)
-    return unless blocked?
-
-    warn "\aImperva wants a security check: click through it in the Chrome window"
-    sleep 1 until form_loaded?
-    warn "security check passed"
-  end
-
-  def form_loaded?
-    form?
-  rescue Ferrum::Error
-    false
-  end
-
-  def form? = @page.evaluate(%(!!document.getElementById("ddlDateType")))
-
-  def blocked? = @page.evaluate(%(!!document.querySelector("iframe[src*='_Incapsula_Resource']")))
-
   # Run js, which submits the form, and wait for the page it loads.  The
   # marker on window goes away with the old page, so we can't mistake the
   # old page for the new one.
@@ -170,21 +119,6 @@ class AppealsWeb
     @page.execute("window.__searching = true; #{js}")
     wait_for do
       @page.evaluate(%(window.__searching === undefined && document.readyState === "complete")) && form?
-    end
-  end
-
-  def wait_for(timeout: 300)
-    deadline = Time.now + timeout
-    loop do
-      begin
-        return if yield
-        raise Blocked if blocked?
-      rescue Ferrum::Error
-        # the page went away mid-check; try again
-      end
-      raise "timed out waiting for AppealsWeb" if Time.now > deadline
-
-      sleep 0.25
     end
   end
 
@@ -274,7 +208,7 @@ if opts[:dry_run]
   exit
 end
 
-site = AppealsWeb.new(opts[:profile])
+site = Searcher.new(opts[:profile])
 failed = 0
 begin
   todo.each do |type, from, to|
@@ -288,7 +222,7 @@ begin
     warn "#{type} #{from} #{to}: #{e.class}: #{e.message}"
     # start over with a fresh browser in case it's the one that's broken
     site.quit rescue nil
-    site = AppealsWeb.new(opts[:profile])
+    site = Searcher.new(opts[:profile])
   rescue StandardError => e
     failed += 1
     warn "#{type} #{from} #{to}: #{e.class}: #{e.message}"
