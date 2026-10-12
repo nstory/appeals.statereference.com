@@ -14,6 +14,7 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 | etl | scripts to download and parse appeals |
 | etl/input/searches/ | JSON file for each search performed |
 | etl/input/downloads/nnn/ | contains file from Download.aspx?DownloadPath=nnn |
+| etl/input/text/nnn.txt | text extracted from the pdf in downloads/nnn |
 | site | jekyll site for appeals.statereference.com |
 
 ## SEARCHES
