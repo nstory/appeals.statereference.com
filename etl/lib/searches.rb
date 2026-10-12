@@ -156,29 +156,40 @@ class Searcher < AppealsWeb
   end
 
   # Post the form as a click on PDF button <name> would, and read the
-  # DownloadPath off the URL the post redirects to.  fetch rather than a
-  # click keeps the results page where it is for the next button.
+  # DownloadPath off the Location the post redirects to.  fetch rather than a
+  # click keeps the results page where it is for the next button.  We don't
+  # follow the redirect: Chrome fails a download whose unquoted filename has
+  # commas in it ("spr243258, spr243261.pdf") as having several
+  # Content-Dispositions.  fetch can't see the Location of a redirect it
+  # doesn't follow, so we read it from the browser's record of the traffic.
   def download_path(name)
-    url = @page.evaluate_async(<<~JS, 120, name)
+    @page.network.clear(:traffic)
+    res = @page.evaluate_async(<<~JS, 120, name)
       const [name, done] = arguments;
       const form = document.getElementById("__VIEWSTATE").form;
       const body = new URLSearchParams(new FormData(form));
       body.set(name + ".x", "8");
       body.set(name + ".y", "8");
-      const abort = new AbortController();
-      fetch(form.action, { method: "POST", body, signal: abort.signal })
+      fetch(form.action, { method: "POST", body, redirect: "manual" })
         .then(r => {
-          if (r.url.includes("Download.aspx")) { done(r.url); abort.abort(); }
-          else r.text().then(t => done(t.includes("_Incapsula_Resource") ? "blocked" : r.url));
+          if (r.type === "opaqueredirect") done("redirect");
+          else r.text().then(t => done(t.includes("_Incapsula_Resource") ? "blocked" : "status " + r.status));
         })
         .catch(e => done("error: " + e));
     JS
-    raise Blocked if url == "blocked"
+    raise Blocked if res == "blocked"
 
-    path = url.start_with?("http") && URI.decode_www_form(URI(url).query || "").to_h["DownloadPath"]
-    raise "#{name} didn't lead to a download: #{url}" unless path&.match?(/\A\d+\z/)
+    location = res == "redirect" && redirect_location
+    path = location ? URI.decode_www_form(URI(location).query || "").to_h["DownloadPath"] : nil
+    raise "#{name} didn't lead to a download: #{location || res}" unless path&.match?(/\A\d+\z/)
 
     Integer(path)
+  end
+
+  def redirect_location
+    ex = @page.network.traffic.reverse.find { |e| e.request&.method == "POST" && e.response&.status == 302 }
+    headers = ex&.response&.headers || {}
+    headers["Location"] || headers["location"]
   end
 end
 

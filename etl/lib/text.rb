@@ -6,15 +6,18 @@
 # written to nnn.txt.part and renamed into place when it's complete, so an
 # nnn.txt is always a finished one.  A failed one is left for the next run.
 #
-# The determinations are Word documents saved as PDF, so they carry their
-# text.  One that gives almost none is likely a scan, which would need OCR;
-# that's reported as a failure rather than written.
+# Most determinations are Word documents saved as PDF, so they carry their
+# text.  One that gives almost none is a scan, and we OCR it with ocrmypdf
+# instead.  One that still gives almost none is reported as a failure rather
+# than written.
 
 require "fileutils"
 require "open3"
 require "optparse"
+require "tempfile"
 
-# fewer non-space characters than this and it's probably a scan
+# fewer non-space characters than this and it's probably a scan, or one OCR
+# couldn't read
 MIN_CHARS = 200
 
 def parse_options
@@ -52,10 +55,25 @@ def extract(path)
   raise "pdftotext failed: #{err.strip}" unless status.success?
 
   text.force_encoding(Encoding::UTF_8)
-  chars = text.gsub(/[[:space:]]/, "").size
-  raise "only #{chars} characters of text; a scan?" if chars < MIN_CHARS
+  return text if chars(text) >= MIN_CHARS
+
+  text = ocr(path)
+  raise "only #{chars(text)} characters of text, even with OCR" if chars(text) < MIN_CHARS
 
   text
+end
+
+def chars(text) = text.gsub(/[[:space:]]/, "").size
+
+# the text ocrmypdf reads off the pages, without the PDF it would make of them
+def ocr(path)
+  Tempfile.create(["ocr", ".txt"]) do |sidecar|
+    _, err, status = Open3.capture3("ocrmypdf", "--quiet", "--output-type", "none",
+                                    "--sidecar", sidecar.path, path, "-")
+    raise "ocrmypdf failed: #{err.strip}" unless status.success?
+
+    File.read(sidecar.path, encoding: Encoding::UTF_8)
+  end
 end
 
 def write_text(dir, n, text)

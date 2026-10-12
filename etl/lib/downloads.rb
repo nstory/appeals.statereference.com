@@ -13,7 +13,9 @@
 require "base64"
 require "fileutils"
 require "json"
+require "open3"
 require "optparse"
+require "tempfile"
 require "uri"
 require_relative "appeals_web"
 
@@ -68,9 +70,16 @@ class Downloader < AppealsWeb
         reader.readAsDataURL(blob);
       }).catch(e => done({ error: String(e) }));
     JS
-    raise "fetch failed: #{res["error"]}" if res["error"]
+    if res["error"]
+      # Chrome fails a download whose unquoted filename has commas in it
+      # ("spr243258, spr243261.pdf") as having several Content-Dispositions,
+      # so fetch those with curl and Chrome's cookies instead
+      res = curl("#{DOWNLOAD_URL}#{n}")
+    else
+      res["body"] = Base64.decode64(res["data"])
+    end
 
-    body = Base64.decode64(res["data"])
+    body = res["body"]
     disposition = res["disposition"].to_s
     unless res["status"] == 200 && disposition.match?(/attachment/i)
       raise Blocked if body.include?("_Incapsula_Resource")
@@ -78,6 +87,24 @@ class Downloader < AppealsWeb
       raise "not a download: HTTP #{res["status"]} #{res["type"]} #{body.bytesize} bytes"
     end
     [filename(disposition, n), body]
+  end
+
+  # what download_once wants to know of a GET of url, made with curl as Chrome
+  def curl(url)
+    cookies = @page.cookies.all.values.map { |c| "#{c.name}=#{c.value}" }.join("; ")
+    agent = @page.evaluate("navigator.userAgent")
+    Tempfile.create("headers") do |headers|
+      body, err, status = Open3.capture3("curl", "--silent", "--show-error", "--max-time", "120",
+                                         "--dump-header", headers.path, "--user-agent", agent,
+                                         "--header", "Cookie: #{cookies}", url, binmode: true)
+      raise "curl failed: #{err.strip}" unless status.success?
+
+      # the last response's headers, should curl report more than one
+      lines = File.read(headers.path).split(/\r?\n\r?\n/).reject(&:empty?).last.to_s.lines
+      fields = lines.drop(1).to_h { |l| l.split(":", 2).map(&:strip) }.transform_keys(&:downcase)
+      { "status" => lines.first.to_s[/\AHTTP\/\S+ (\d+)/, 1].to_i, "type" => fields["content-type"],
+        "disposition" => fields["content-disposition"], "body" => body }
+    end
   end
 
   # "attachment;filename=spr264043.pdf" => "spr264043.pdf"

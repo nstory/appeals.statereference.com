@@ -15,6 +15,8 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 | etl/input/searches/ | JSON file for each search performed |
 | etl/input/downloads/nnn/ | contains file from Download.aspx?DownloadPath=nnn |
 | etl/input/text/nnn.txt | text extracted from the pdf in downloads/nnn |
+| etl/output/cases.jsonl | one row per case with metadata and links to PDFs |
+| etl/output/r2 | hard links of files for upload to R2 |
 | site | jekyll site for appeals.statereference.com |
 
 ## SEARCHES
@@ -25,3 +27,6 @@ Searches are against [AppealsWeb](https://www.sec.state.ma.us/AppealsWeb/Appeals
 - X=I for Date type "Initial closed"
 - X=R for Date type "Reconsideration closed"
 - X=C for Date type "In camera review closed"
+
+## TODO
+- [ ] mirror PDFs to R2 (no way to hotlink b/c content-disposition: attachment)
