@@ -7,7 +7,12 @@ R2_REMOTE ?= r2
 # TBD
 R2_BUCKET ?=
 
-.PHONY: searches downloads text clean-text r2-sync r2-sync-dry-run check-r2-bucket
+.PHONY: searches downloads text clean-text $(OUTPUT_DIR)/cases.jsonl r2-sync r2-sync-dry-run check-r2-bucket all clean
+
+clean:
+	rm -f $(OUTPUT_DIR)/cases.jsonl
+
+all: searches downloads text $(OUTPUT_DIR)/cases.jsonl
 
 # https://www.sec.state.ma.us/AppealsWeb/AppealsStatus.aspx
 # runs searches for determinations based on the date closed
@@ -24,6 +29,11 @@ text:
 
 clean-text:
 	rm -rf $(TEXT_DIR) && mkdir -p $(TEXT_DIR)
+
+# one line per case in the searches, with links to its PDFs on AppealsWeb
+# and their text
+$(OUTPUT_DIR)/cases.jsonl:
+	bundle exec ruby lib/cases_jsonl.rb --search-dir $(SEARCH_DIR) --download-dir $(DOWNLOAD_DIR) --text-dir $(TEXT_DIR) --output $@
 
 # Upload $(OUTPUT_DIR)/r2 to the R2 bucket.  Needs an `r2` rclone remote.
 # --size-only because R2 doesn't keep the local mtimes; rclone sync deletes
