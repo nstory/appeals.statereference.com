@@ -1,0 +1,21 @@
+title: StateReference Appeals Database
+description: ""
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://appeals.statereference.com" # the base hostname & protocol for your site, e.g. http://example.com
+
+# Build settings
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+sass:
+  style: compressed
+  load_paths:
+    - node_modules
+  quiet_deps: true
+  silence_deprecations: [import, global-builtin, color-functions]
+
+exclude:
+  - Makefile
+  - package.json
+  - package-lock.json

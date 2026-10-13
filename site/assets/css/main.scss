@@ -1,0 +1,37 @@
+---
+---
+
+// Bootstrap variable overrides go here, before the import.
+// See node_modules/bootstrap/scss/_variables.scss for the full list.
+
+// Base text size.  Bootstrap derives headings, buttons and form controls from
+// this, so bumping it scales the whole type ramp rather than body copy alone.
+$font-size-base: 1.25rem;
+
+// Colours from statereference.com's theme (application.bootstrap.scss there),
+// https://coolors.co/3d97b8-0d0b08-7fb069-f44708.  $primary defaults to $blue,
+// so this recolours links and primary components too.
+$blue: #3D97B8;
+$dark: #0D0B08;
+$body-color: $dark;
+
+// $blue on white is only ~3.3:1, under WCAG AA's 4.5:1 for body text, so links
+// get a darker shade of it (~5.6:1).  $blue stays the accent everywhere else.
+$link-color: #2A6F88;
+
+// Heading sizes as multiples of the base.  h1 stands clear of h2 so a page's
+// title outranks its sections; h4-h6 stay at body size, bold, for titles
+// within a list, like search results.  Bootstrap's RFS shrinks the larger
+// ones on narrow screens.
+$h1-font-size: $font-size-base * 2;
+$h2-font-size: $font-size-base * 1.5;
+$h3-font-size: $font-size-base * 1.25;
+$h4-font-size: $font-size-base;
+$h5-font-size: $font-size-base;
+$h6-font-size: $font-size-base;
+
+// Bold, as fw-bold would give.  Bootstrap's default is 500; its
+// $font-weight-bold isn't defined yet at this point.
+$headings-font-weight: 700;
+
+@import "bootstrap/scss/bootstrap";

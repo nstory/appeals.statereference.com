@@ -1,0 +1,10 @@
+{
+  "name": "site",
+  "private": true,
+  "scripts": {
+    "postinstall": "mkdir -p assets/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js node_modules/bootstrap/dist/js/bootstrap.bundle.min.js.map assets/js/"
+  },
+  "dependencies": {
+    "bootstrap": "5.3.8"
+  }
+}
