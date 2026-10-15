@@ -35,3 +35,27 @@ $h6-font-size: $font-size-base;
 $headings-font-weight: 700;
 
 @import "bootstrap/scss/bootstrap";
+
+.home-content {
+  h2 {
+    margin-top: 2.5rem;
+  }
+
+  > .row > :first-child > h2:first-child {
+    margin-top: 0;
+  }
+
+  @include media-breakpoint-up(lg) {
+    > .row > * > h2:first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+.btn-black {
+  @include button-variant(
+    $black, $black, $white,
+    $gray-800, $gray-800, $white,
+    $gray-700, $gray-700, $white
+  );
+}
