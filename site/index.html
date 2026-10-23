@@ -6,7 +6,7 @@ layout: default
 <div class="bg-light py-5 mb-5 border-bottom">
   <div class="container">
     <h1>Massachusetts Public Records Appeals</h1>
-    <p>Search XX,XXX determinations by the Supervisor of Records.</p>
+    <p>Search {{ site.data.case_count | delimit }} determinations by the Supervisor of Records.</p>
     {% include search-form.html classes="d-flex" %}
   </div>
 </div>
@@ -14,8 +14,16 @@ layout: default
 <div class="container home-content">
   <div class="row gx-5">
     <div class="col-lg-6">
-      <h2>What is this?</h2>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+      <h2>What is a public records appeal?</h2>
+      <p>Under the Massachusetts public records law, if a requestor is unsatisfied with the response they received, they may open an appeal with the Supervisor of Records. The Supervisor will then make a determination, and may order an agency to provide an additional response.</p>
+      <p>These determinations are a rich resource providing insights into the public records law and its exemptions.</p>
+
+      <h2>What is this database?</h2>
+      <p>We download the determinations made by the Supervisor of Records from 2020 to present. We index those determinations to make them searchable online.</p>
+
+      <h2>Why is this useful?</h2>
+      <p>A few ideas:</p>
+      <p><strong>1.</strong> Did you have records withheld by a Records Access Officer (RAO)? Search the determinations for precedent to understand if the RAO has a case.</p>
 
       <h2>Sit amet consectetur?</h2>
       <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
@@ -30,11 +38,33 @@ layout: default
     </div>
 
     <div class="col-lg-6">
-      <h2>Eiusmod tempor</h2>
-      <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+      <h2>Statistics</h2>
+      <table class="table">
+        <tbody>
+          <tr>
+            <th scope="row">Number of determinations</th>
+            <td>{{ site.data.case_count | delimit }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Newest determination</th>
+            <td>{{ site.data.newest_date | date: "%B %-d, %Y" }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Oldest determination</th>
+            <td>{{ site.data.oldest_date | date: "%B %-d, %Y" }}</td>
+          </tr>
+        </tbody>
+      </table>
 
-      <h2>Incididunt ut labore</h2>
-      <p>Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.</p>
+      <h2>Links</h2>
+      <dl>
+        <dt><a href="https://www.sec.state.ma.us/divisions/public-records/download/guide.pdf">Guide to the Massachusetts Public Records Law</a></dt>
+        <dd>This great resource by the Secretary of the Commonwealth is a must-read if you make public records reuqests in Massachusetts.</dd>
+        <dt><a href="https://www.statereference.com/">StateReference.com</a></dt>
+        <dd>See all the databases we offer.</dd>
+      </dl>
     </div>
   </div>
 </div>
+
+<script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>

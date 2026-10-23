@@ -1,0 +1,145 @@
+---
+layout: default
+title: Search
+permalink: /search/
+sitemap: false
+noindex: true
+---
+{% include navbar.html %}
+
+{%- comment -%}
+  The search box sits directly above the results it produces, in the same band
+  the homepage puts it in.
+
+  Below it is a shell only; assets/js/search.js fills it from the Pagefind
+  index.  Having that shell is what tells the script this is the page that
+  answers a search rather than the one that sends it here.
+{%- endcomment -%}
+<div class="border-bottom bg-body-tertiary py-3">
+  <div class="container">
+    {% include search-form.html classes="d-flex" %}
+  </div>
+</div>
+
+<main class="container py-4">
+  <h1 class="visually-hidden">Search</h1>
+
+  {%- comment -%}
+    gx, not g: below md the sidebar's column is empty -- its contents are in the
+    drawer -- and a vertical gutter would leave a gap where it would have been.
+  {%- endcomment %}
+  <div class="row gx-4">
+    {%- comment -%}
+      The filters: one fieldset per Pagefind filter, named in data-filter.  The
+      boxes live outside the form and carry no `name`, so they're JS-only:
+      search.js turns each fieldset into ?type=, ?sub_type= or ?year= and fills
+      in each count from the index.  Each box's value is the URL slug; data-value
+      is the exact Pagefind filter value -- for a type or a year, as the Cases
+      plugin reads it from cases.jsonl; for a stage, its value from
+      _data/sub_types.yml, whose label rides in data-label for the summary line.
+
+      From md up it's a plain sidebar.  Below that, offcanvas-md turns the same
+      markup into a drawer, opened by the Filters button beside the sort
+      control, so a phone shows results first rather than a list to scroll past.
+      The drawer's header, title and close button only exist below md.
+    {%- endcomment -%}
+    <aside class="col-md-4 col-lg-3" aria-label="Filter results">
+      <div class="offcanvas-md offcanvas-start" tabindex="-1" id="search-filters"
+           aria-labelledby="search-filters-title">
+        <div class="offcanvas-header border-bottom">
+          <h2 class="offcanvas-title h5" id="search-filters-title">Filters</h2>
+          <button class="btn-close" type="button" data-bs-dismiss="offcanvas"
+                  data-bs-target="#search-filters" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column gap-4">
+          <fieldset class="w-100" data-filter="type">
+            <legend class="h6 fw-semibold mb-2">Type</legend>
+            <ul class="list-unstyled mb-2">
+              {%- for type in site.data.types %}
+              <li>
+                <label class="d-flex align-items-center gap-2 py-1">
+                  <input class="form-check-input mt-0 flex-shrink-0" type="checkbox"
+                         value="{{ type | slugify }}" data-value="{{ type | escape }}">
+                  <span class="flex-grow-1">{{ type | escape }}</span>
+                  <span class="small text-body-secondary" data-filter-count></span>
+                </label>
+              </li>
+              {%- endfor %}
+            </ul>
+            <button class="btn btn-link btn-sm p-0 d-none" type="button" data-filter-clear>Clear types</button>
+          </fieldset>
+
+          <fieldset class="w-100" data-filter="sub_type">
+            <legend class="h6 fw-semibold mb-2">Stage</legend>
+            <ul class="list-unstyled mb-2">
+              {%- for sub_type in site.data.sub_types %}
+              <li>
+                <label class="d-flex align-items-center gap-2 py-1">
+                  <input class="form-check-input mt-0 flex-shrink-0" type="checkbox"
+                         value="{{ sub_type.value | slugify }}" data-value="{{ sub_type.value | escape }}"
+                         data-label="{{ sub_type.label | escape }}">
+                  <span class="flex-grow-1">{{ sub_type.label | escape }}</span>
+                  <span class="small text-body-secondary" data-filter-count></span>
+                </label>
+              </li>
+              {%- endfor %}
+            </ul>
+            <button class="btn btn-link btn-sm p-0 d-none" type="button" data-filter-clear>Clear stages</button>
+          </fieldset>
+
+          <fieldset class="w-100" data-filter="year">
+            <legend class="h6 fw-semibold mb-2">Year</legend>
+            <ul class="list-unstyled mb-2">
+              {%- for year in site.data.years %}
+              <li>
+                <label class="d-flex align-items-center gap-2 py-1">
+                  <input class="form-check-input mt-0 flex-shrink-0" type="checkbox"
+                         value="{{ year }}" data-value="{{ year }}">
+                  <span class="flex-grow-1">{{ year }}</span>
+                  <span class="small text-body-secondary" data-filter-count></span>
+                </label>
+              </li>
+              {%- endfor %}
+            </ul>
+            <button class="btn btn-link btn-sm p-0 d-none" type="button" data-filter-clear>Clear years</button>
+          </fieldset>
+        </div>
+      </div>
+    </aside>
+
+    <div class="col-md-8 col-lg-9">
+      {%- comment -%}
+        The sort control sits with the results rather than in the form, because it
+        reorders what's already there rather than asking for something new.  It's
+        JS-only and hidden until there's something to sort.
+      {%- endcomment -%}
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <p class="text-body-secondary mb-0" data-search-summary role="status" aria-live="polite"></p>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm d-md-none" type="button"
+                  data-bs-toggle="offcanvas" data-bs-target="#search-filters" aria-controls="search-filters">
+            Filters <span class="badge text-bg-dark" data-filter-badge hidden></span>
+          </button>
+          <div class="d-none" data-sort>
+            <label class="visually-hidden" for="search-sort">Sort results by</label>
+            <select class="form-select form-select-sm w-auto" id="search-sort" data-sort-select>
+              <option value="relevance">Relevance</option>
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <ol class="list-unstyled mb-0" data-search-results></ol>
+
+      <nav class="mt-4" aria-label="Search results pages" data-search-pagination></nav>
+    </div>
+  </div>
+
+  <noscript>
+    <p class="alert alert-warning">Search needs JavaScript.</p>
+  </noscript>
+</main>
+
+<script type="module" src="{{ '/assets/js/search.js' | relative_url }}"></script>

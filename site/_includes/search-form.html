@@ -1,8 +1,17 @@
-<form class="{{ include.classes }}" role="search" action="{{ '/search/' | relative_url }}" method="get">
+{%- comment -%}
+  The search box itself, shared by the homepage and /search/.  assets/js/search.js
+  binds to the one instance on the page, so only ever render it once.
+
+  data-pagefind-bundle carries the index's URL so the script needs no Liquid of
+  its own.  It rides on the form because the form is the one element both pages
+  have -- /search/ also has the results it fills, the homepage doesn't.
+{%- endcomment -%}
+<form class="{{ include.classes }}" role="search" action="{{ '/search/' | relative_url }}" method="get"
+      data-search-form data-pagefind-bundle="{{ '/pagefind/pagefind.js' | relative_url }}">
   <div class="input-group" style="max-width: 50rem">
     <input class="form-control" type="search" name="q"
-           placeholder="" aria-label="Search appeals"
-           autocomplete="off">
+           placeholder="Search by requester, custodian or any text" aria-label="Search appeals"
+           autocomplete="off" data-search-input>
     <button class="btn btn-black" type="submit">Search</button>
   </div>
 </form>

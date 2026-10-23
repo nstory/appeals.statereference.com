@@ -1,0 +1,10 @@
+# The stages the search sidebar offers, in display order.  `value` has to match
+# AppealsWeb's sub_type in etl/output/cases.jsonl exactly -- Pagefind filters on
+# the value string, so a typo here silently yields zero results rather than an
+# error.  `label` is what the sidebar and the results show.
+- value: Initial
+  label: Initial
+- value: Recon
+  label: Reconsideration
+- value: In Cam
+  label: In camera review

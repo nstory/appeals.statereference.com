@@ -17,5 +17,14 @@ sass:
 
 exclude:
   - Makefile
+  - lib
   - package.json
   - package-lock.json
+
+# Pagefind writes its bundle into _site, which Jekyll didn't generate and so
+# deletes on every regeneration -- including the ones `jekyll serve --watch`
+# does under a running server, which leaves search broken until the next
+# `make index`.  Keeping it means the index survives edits; it only goes stale
+# when etl/output/cases.jsonl changes, and `make reindex` refreshes it.  The two
+# defaults have to be repeated; this replaces them.
+keep_files: [".git", ".svn", "pagefind"]
