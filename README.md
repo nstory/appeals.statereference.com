@@ -28,4 +28,5 @@ Searches are against [AppealsWeb](https://www.sec.state.ma.us/AppealsWeb/Appeals
 - X=C for Date type "In camera review closed"
 
 ## TODO
-- [ ] mirror PDFs to R2 (no way to hotlink b/c content-disposition: attachment)
+- [X] mirror PDFs to R2 (no way to hotlink b/c content-disposition: attachment)
+- [ ] add example searches
