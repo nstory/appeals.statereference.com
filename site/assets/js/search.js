@@ -232,8 +232,8 @@ function resultItem(result, excerpting) {
     const line = document.createElement("p");
     line.className = `small text-body-secondary ${excerpting ? "mb-1" : "mb-0"}`;
     line.textContent = details.join(" · ");
-    // AppealsWeb serves the PDFs as downloads, so these download rather than
-    // open; the heading's detail page is where to read about the case.
+    // These open our copy in R2; a PDF we haven't downloaded yet links to
+    // AppealsWeb, which serves it as a download.
     for (const pdf of pdfs) {
       if (line.childNodes.length) line.append(" · ");
       const a = document.createElement("a");

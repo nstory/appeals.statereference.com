@@ -9,8 +9,9 @@
 # camera review) turns up in more than one search, so we take its row from the
 # search run most recently.
 #
-# For now the PDFs link to AppealsWeb's Download.aspx, with the filename the
-# server gave the download when we have it, and null when we don't.  A PDF
+# Each PDF links to AppealsWeb's Download.aspx and to our copy in R2 (see
+# r2-sync in the Makefile), with the filename the server gave the download.
+# The filename and R2 link are null when we haven't downloaded it.  A PDF
 # whose text we don't have yet (see text.rb) is left out of the fulltext.
 
 require "fileutils"
@@ -26,14 +27,15 @@ FIELDS = %w[case_no opened extended_deadline closed type sub_type status request
 def parse_options
   opts = {}
   OptionParser.new do |o|
-    o.banner = "usage: cases_jsonl.rb --search-dir DIR --download-dir DIR --text-dir DIR --output FILE"
+    o.banner = "usage: cases_jsonl.rb --search-dir DIR --download-dir DIR --text-dir DIR --r2-url URL --output FILE"
     o.on("--search-dir DIR") { |v| opts[:searches] = v }
     o.on("--download-dir DIR") { |v| opts[:downloads] = v }
     o.on("--text-dir DIR") { |v| opts[:texts] = v }
+    o.on("--r2-url URL") { |v| opts[:r2_url] = v.chomp("/") }
     o.on("--output FILE") { |v| opts[:output] = v }
   end.parse!
-  unless opts[:searches] && opts[:downloads] && opts[:texts] && opts[:output]
-    abort "--search-dir, --download-dir, --text-dir and --output are required"
+  unless opts[:searches] && opts[:downloads] && opts[:texts] && opts[:r2_url] && opts[:output]
+    abort "--search-dir, --download-dir, --text-dir, --r2-url and --output are required"
   end
   opts
 end
@@ -60,12 +62,18 @@ def fulltext(texts, paths)
   end.join("\n\n")
 end
 
-def case_line(row, downloads, texts)
+# input/downloads/nnn/xxx.pdf is synced to appeals/nnn/xxx.pdf in R2
+def r2_url(r2_url, n, filename)
+  filename && "#{r2_url}/#{n}/#{URI.encode_uri_component(filename)}"
+end
+
+def case_line(row, downloads, texts, r2)
   JSON.generate(
     **row.slice(*FIELDS),
     detail_url: DETAIL_URL + URI.encode_www_form_component(row["detail_token"]),
     pdfs: row["download_paths"].map do |n|
-      { download_path: n, url: "#{DOWNLOAD_URL}#{n}", filename: download_filename(downloads, n) }
+      filename = download_filename(downloads, n)
+      { download_path: n, url: "#{DOWNLOAD_URL}#{n}", filename:, r2_url: r2_url(r2, n, filename) }
     end,
     fulltext: fulltext(texts, row["download_paths"])
   )
@@ -73,7 +81,7 @@ end
 
 opts = parse_options
 rows = latest_rows(opts[:searches])
-lines = rows.keys.sort.reverse.map { |case_no| case_line(rows[case_no], opts[:downloads], opts[:texts]) }
+lines = rows.keys.sort.reverse.map { |case_no| case_line(rows[case_no], opts[:downloads], opts[:texts], opts[:r2_url]) }
 
 FileUtils.mkdir_p(File.dirname(opts[:output]))
 File.open("#{opts[:output]}.part", "w") { |f| f.puts(lines) }

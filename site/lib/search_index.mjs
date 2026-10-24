@@ -32,7 +32,8 @@ for await (const line of lines) {
   const appeal = JSON.parse(line);
   const date = appeal.closed ?? appeal.opened;
   // Meta values are strings, so the PDFs go in as JSON for search.js to parse.
-  const pdfs = appeal.pdfs.map(({ url, filename }) => ({ url, filename }));
+  // Link to our copy in R2, or to AppealsWeb for a PDF we haven't downloaded.
+  const pdfs = appeal.pdfs.map(({ url, r2_url, filename }) => ({ url: r2_url ?? url, filename }));
 
   const { errors } = await index.addCustomRecord({
     url: appeal.detail_url,

@@ -16,7 +16,6 @@ Almost all of the code in this repo was written by [Claude Code](https://claude.
 | etl/input/downloads/nnn/ | contains file from Download.aspx?DownloadPath=nnn |
 | etl/input/text/nnn.txt | text extracted from the pdf in downloads/nnn |
 | etl/output/cases.jsonl | one row per case with metadata and links to PDFs |
-| etl/output/r2 | hard links of files for upload to R2 |
 | site | jekyll site for appeals.statereference.com |
 
 ## SEARCHES
