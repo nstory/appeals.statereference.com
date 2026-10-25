@@ -6,8 +6,9 @@
 # _site/pagefind from Jekyll, so each indexing clears it first; left alone,
 # stale fragments pile up.
 JEKYLL ?= bundle exec jekyll
+WRANGLER ?= npx wrangler@4.152.0
 
-.PHONY: all build index reindex serve clean
+.PHONY: all build index reindex serve deploy login clean
 
 all: build
 
@@ -28,6 +29,14 @@ reindex:
 
 serve: build
 	$(JEKYLL) serve --skip-initial-build --watch
+
+# The Pages project is "appeals"; Cloudflare served it at appeals-94g.pages.dev
+# because appeals.pages.dev was taken.
+deploy: build
+	$(WRANGLER) pages deploy _site --project-name appeals
+
+login:
+	$(WRANGLER) login
 
 clean:
 	rm -rf _site .jekyll-cache .jekyll-metadata
