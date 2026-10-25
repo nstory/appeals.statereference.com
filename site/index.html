@@ -8,7 +8,7 @@ layout: default
     <h1>Massachusetts Public Records Appeals</h1>
     <p>Search {{ site.data.case_count | delimit }} determinations issued by the Supervisor of Records.</p>
     {% include search-form.html classes="d-flex" %}
-    {%- assign examples = 'Gaza|"internal affairs"|attorney client privilege' | split: "|" %}
+    {%- assign examples = 'Palestine|"internal affairs"|attorney client privilege' | split: "|" %}
     <p class="small mt-2 mb-0">Try:
       {%- for q in examples %}
         <a href="{{ '/search/' | relative_url }}?q={{ q | url_encode }}">{{ q | escape }}</a>{% unless forloop.last %},{% endunless %}
@@ -27,11 +27,6 @@ layout: default
 
       <h2>What is this database?</h2>
       <p>We download the determinations issued by the Supervisor of Records from 2020 to the present and index them so you can search them online.</p>
-
-      <h2>Why is this useful?</h2>
-      <p>A few ideas:</p>
-      <p><strong>1.</strong> Are you thinking of making a public records request, but you don't know exactly what to ask for?<br>Find requests made by previous requesters.</p>
-      <p><strong>2.</strong> Did an agency deny your request?<br>Search the database for similar requests and see whether the Supervisor upheld those denials.</p>
 
       <h2>How is this different from the state's database?</h2>
       <p>The Secretary of the Commonwealth provides the <a href="https://www.sec.state.ma.us/AppealsWeb/AppealsStatus.aspx">AppealsWeb</a> interface. It's useful for searching particular fields, and for accessing the older determinations we don't index.</p>
@@ -63,7 +58,7 @@ layout: default
         <dd>This great resource by the Secretary of the Commonwealth is a must-read if you make public records requests in Massachusetts.</dd>
         <dt><a href="https://www.statereference.com/">StateReference.com</a></dt>
         <dd>See all the databases we offer.</dd>
-        <dt><a href="https://www.nathanielstory.com/">Nathaniel Story</a></dt>
+        <dt><a href="https://www.nathanielstory.com/">Nathan Story</a></dt>
         <dd>I'm the guy responsible for this.</dd>
       </dl>
     </div>

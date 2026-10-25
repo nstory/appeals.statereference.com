@@ -1,10 +1,9 @@
-# Build the site, then index it.  lib/search_index.mjs builds the Pagefind
-# index from etl/output/cases.jsonl, not from the site, but writes its bundle
-# to _site/pagefind -- and `jekyll build` empties _site, so it still has to run
-# after Jekyll, which is why this isn't two independent targets.  Pagefind
-# never deletes a previous run's files, and keep_files (see reindex) spares
-# _site/pagefind from Jekyll, so each indexing clears it first; left alone,
-# stale fragments pile up.
+# Build the site and its search index.  lib/search_index.mjs builds the
+# Pagefind index from etl/output/cases.jsonl, not from the site, and writes its
+# bundle to _site/pagefind, which keep_files (see _config.yml) spares from
+# Jekyll -- so the index is its own target, rebuilt only when its inputs
+# change.  Pagefind never deletes a previous run's files, so each indexing
+# clears _site/pagefind first; left alone, stale fragments pile up.
 JEKYLL ?= bundle exec jekyll
 WRANGLER ?= npx wrangler@4.152.0
 
@@ -12,20 +11,25 @@ WRANGLER ?= npx wrangler@4.152.0
 
 all: build
 
+CASES ?= ../etl/output/cases.jsonl
+# Pagefind always writes this, so it stands in for the whole index.
+PAGEFIND_ENTRY = _site/pagefind/pagefind-entry.json
+
 build: index
-
-index:
 	$(JEKYLL) build
+
+index: $(PAGEFIND_ENTRY)
+
+# package-lock.json is here for Pagefind upgrades.
+$(PAGEFIND_ENTRY): $(CASES) lib/search_index.mjs package-lock.json
 	rm -rf _site/pagefind
 	node lib/search_index.mjs
 
-# _config.yml's keep_files holds onto _site/pagefind across the regenerations
-# watching does, so edits leave search working against the index built above.
-# The index only goes stale when etl/output/cases.jsonl changes; `make reindex`
-# refreshes it in place, from another shell, without stopping the server.
+# keep_files also holds onto _site/pagefind across the regenerations `jekyll
+# serve --watch` does, so edits leave search working.  `make reindex` forces a
+# rebuild in place, from another shell, without stopping the server.
 reindex:
-	rm -rf _site/pagefind
-	node lib/search_index.mjs
+	$(MAKE) -B $(PAGEFIND_ENTRY)
 
 serve: build
 	$(JEKYLL) serve --skip-initial-build --watch

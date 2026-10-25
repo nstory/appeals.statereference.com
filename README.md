@@ -26,7 +26,3 @@ Searches are against [AppealsWeb](https://www.sec.state.ma.us/AppealsWeb/Appeals
 - X=I for Date type "Initial closed"
 - X=R for Date type "Reconsideration closed"
 - X=C for Date type "In camera review closed"
-
-## TODO
-- [X] mirror PDFs to R2 (no way to hotlink b/c content-disposition: attachment)
-- [ ] add example searches
