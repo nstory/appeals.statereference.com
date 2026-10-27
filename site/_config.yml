@@ -1,7 +1,14 @@
 title: StateReference Appeals Database
-description: ""
+description: "Full-text database of determinations issued by the Massachusetts Supervisor of Records on public records appeals"
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://appeals.statereference.com" # the base hostname & protocol for your site, e.g. http://example.com
+tagline: Massachusetts Public Records Appeals
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      image: /assets/img/share.png
 
 # Build settings
 plugins:
