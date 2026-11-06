@@ -9,12 +9,12 @@ R2_BUCKET ?= ethics-files
 # where appeals/ in the bucket is served
 R2_URL ?= https://ethics-files.nathanielstory.com/appeals
 
-.PHONY: searches downloads text clean-text $(OUTPUT_DIR)/cases.jsonl r2-sync r2-sync-dry-run check-r2-bucket all clean
+.PHONY: searches downloads text clean-text $(OUTPUT_DIR)/cases.jsonl $(OUTPUT_DIR)/cases.csv r2-sync r2-sync-dry-run check-r2-bucket all clean
 
 clean:
-	rm -f $(OUTPUT_DIR)/cases.jsonl
+	rm -f $(OUTPUT_DIR)/cases.jsonl $(OUTPUT_DIR)/cases.csv
 
-all: searches downloads text $(OUTPUT_DIR)/cases.jsonl
+all: searches downloads text $(OUTPUT_DIR)/cases.jsonl $(OUTPUT_DIR)/cases.csv
 
 # https://www.sec.state.ma.us/AppealsWeb/AppealsStatus.aspx
 # runs searches for determinations based on the date closed
@@ -36,6 +36,11 @@ clean-text:
 # and their text
 $(OUTPUT_DIR)/cases.jsonl:
 	bundle exec ruby lib/cases_jsonl.rb --search-dir $(SEARCH_DIR) --download-dir $(DOWNLOAD_DIR) --text-dir $(TEXT_DIR) --r2-url $(R2_URL) --output $@
+
+# cases.jsonl without the PDFs and text: one row per case
+CSV_FIELDS = case_no opened closed type sub_type status requester custodian detail_url
+$(OUTPUT_DIR)/cases.csv:
+	jq -rn --arg f "$(CSV_FIELDS)" '($$f | split(" ")) as $$k | ($$k, (inputs | [.[$$k[]]])) | @csv' $(OUTPUT_DIR)/cases.jsonl > $@
 
 # Upload $(DOWNLOAD_DIR) to appeals/ in the R2 bucket, so input/downloads/nnn/xxx.pdf
 # lands at appeals/nnn/xxx.pdf.  Needs an `r2` rclone remote.  --size-only
